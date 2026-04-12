@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[]) {
     saludar("cpu"); 
-   //Probando
+   //Probando2
      return 0;
    
 }
