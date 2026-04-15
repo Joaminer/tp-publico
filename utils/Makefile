@@ -1,94 +1,40 @@
-include settings.mk
+#Nombre del empaquetado final (Biblioteca estática)
+TARGET = libutils.a
 
-################################################################################
+#Compilador y banderas (flags)
+CC = gcc
+CFLAGS = -Wall -Wextra -g -I./src
 
-outname = lib/lib$(1).a
+#Directorios de trabajo
+SRC_DIR = src/utils
+OBJ_DIR = obj
 
-define compile_out
-	$(AR) $(ARFLAGS) "$@" $^
-endef
+#Buscar automáticamente todos los .c en src y definir sus .o correspondientes
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
-define compile_objs
-	$(CC) $(CFLAGS) -fPIC -c -o "$@" $< $(IDIRS:%=-I%)
-endef
+#Regla por defecto que se ejecuta al escribir "make"
+all: $(TARGET)
 
-################################################################################
+#Regla para empaquetar la biblioteca estática usando "ar"
+$(TARGET): $(OBJS)
+	@echo "Empaquetando la biblioteca $(TARGET)..."
+	ar rcs $@ $^
+	@echo "¡utils compilado con éxito!"
 
-# Project name
-NAME=$(shell pwd | xargs -I{} basename "{}")
+#Regla para compilar cada .c en un .o
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | directories
+	@echo "Compilando $<..."
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Set compiler and archiver options
-CC=gcc
-AR=ar
-ARFLAGS=rcs
-MAKE=make --no-print-directory
+#Regla para crear la carpeta "obj" si no existe
+directories:
+	@mkdir -p $(OBJ_DIR)
 
-# Set prerrequisites
-SRCS_C += $(shell find src -iname "*.c")
-SRCS_H += $(shell find src -iname "*.h")
-DEPS = $(foreach SHL,$(SHARED_LIBPATHS),$(SHL:%=%/lib/lib$(notdir $(SHL)).so)) \
-	$(foreach STL,$(STATIC_LIBPATHS),$(STL:%=%/lib/lib$(notdir $(STL)).a))
-
-# Set header paths to (-I)nclude
-IDIRS += $(addsuffix /src,$(SHARED_LIBPATHS) $(STATIC_LIBPATHS) .) /usr/local/include
-
-# Set library paths to (-L)ook
-LIBDIRS = $(addsuffix /lib,$(SHARED_LIBPATHS) $(STATIC_LIBPATHS)) /usr/local/lib
-
-# Set shared library paths to be found in runtime (-rpath)
-RUNDIRS = $(SHARED_LIBPATHS:%=$(shell pwd)/%/lib)
-
-# Set intermediate objects
-OBJS = $(patsubst src/%.c,obj/%.o,$(SRCS_C))
-
-# Set output
-OUT = $(call outname,$(NAME))
-
-# Set test folder
-TESTS_DIR=tests
-
-# Set test prerrequisites
-TESTS_C += $(shell find $(TESTS_DIR)/ -iname "*.c" 2> /dev/null)
-TESTS_H += $(shell find $(TESTS_DIR)/ -iname "*.h" 2> /dev/null)
-
-# Set test intermediate objects
-TEST_OBJS = $(filter-out $(TEST_EXCLUDE), $(TESTS_C)) $(patsubst src/%.c,obj/%.o,$(filter-out $(TEST_EXCLUDE), $(SRCS_C)))
-
-# Set test binary targets
-TEST = bin/$(NAME)_tests
-
-.PHONY: all
-all: debug
-
-.PHONY: debug
-debug: CFLAGS = $(CDEBUG)
-debug: $(OUT)
-
-.PHONY: release
-release: CFLAGS = $(CRELEASE)
-release: $(OUT)
-
-.PHONY: test
-test: CFLAGS = $(CDEBUG)
-test: $(TEST)
-
-.PHONY: clean
+#Regla para limpiar el proyecto al escribir "make clean"
 clean:
-	-rm -rfv $(dir $(TEST) $(OBJS) $(OUT))
-	-for dir in $(SHARED_LIBPATHS) $(STATIC_LIBPATHS); do $(MAKE) -C $$dir clean; done
+	@echo "Limpiando archivos de utils..."
+	rm -rf $(OBJ_DIR) $(TARGET)
 
-$(OUT): $(OBJS) | $(dir $(OUT))
-	$(call compile_out)
-
-$(TEST): $(TEST_OBJS) $(DEPS) | $(dir $(TEST))
-	$(CC) $(CFLAGS) -o "$@" $^ $(IDIRS:%=-I%) $(LIBDIRS:%=-L%) $(RUNDIRS:%=-Wl,-rpath,%) $(LIBS:%=-l%) -lcspecs
-
-obj/%.o: src/%.c $(SRCS_H) $(DEPS) | $(dir $(OBJS))
-	$(call compile_objs)
-
-.SECONDEXPANSION:
-$(DEPS): $$(shell find $$(patsubst %lib/,%src/,$$(dir $$@)) -iname "*.c" -or -iname "*.h")
-	$(MAKE) -C $(patsubst %lib/,%,$(dir $@)) 3>&1 1>&2 2>&3 | sed -E 's,(src/)[^ ]+\.(c|h)\:,$(patsubst %lib/,%,$(dir $@))&,' 3>&2 2>&1 1>&3
-
-$(sort $(dir $(OUT) $(OBJS))):
-	mkdir -pv $@
+#Evita conflictos si por casualidad creas un archivo llamado "all" o "clean"
+.PHONY: all clean directories
