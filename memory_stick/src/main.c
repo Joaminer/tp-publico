@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
         log_info(logger, "## Conectado a Kernel Memory");
         
         // Usamos la función de protocolo para enviar el Handshake
-        enviar_codigo_operacion(conexion_km, HANDSHAKE_MS_MEMORIA);
+        enviar_handshake_memory_stick(conexion_km, tam_memoria);
         
         // Nota: Seguramente hay que mandar un paquete extra acá avisándole al Kernel Memory
         // de qué tamaño es este Memory Stick (el tam_memoria),.
