@@ -25,4 +25,5 @@ int crear_conexion(char* ip, char* puerto);
 void liberar_conexion(int socket_cliente);
 void atender_clientes_multihilo(int socket_servidor, t_log* logger, void* (*handler_cliente)(void*));
 
+void *atender_cliente_v1(void *arg);
 #endif /* SOCKETS_H_ */

@@ -119,3 +119,43 @@ void atender_clientes_multihilo(int socket_servidor, t_log* logger, void* (*hand
         }
     }
 }
+
+
+
+void *atender_cliente_v1(void *arg)
+{
+    t_args_cliente* args = (t_args_cliente*)arg;
+
+    int fd = args->socket_cliente;
+    t_log* logger = args->logger;
+
+
+    while (1)
+    {
+        int opcion;
+
+        int bytes = recv(fd, &opcion, sizeof(int), 0);
+
+        if (bytes <= 0)
+        {
+            printf("cliente desconectado\n");
+            close(fd);
+            break;
+        }
+         log_info(logger, "Se recibió un mensaje del cliente");
+        switch (opcion)
+        {
+            case 1:
+                printf("OPCION-1\n");
+                break;
+
+            case 2:
+                printf("OPCION-2\n");
+                break;
+            case 3:
+                printf("OPCION-3\n");
+        }
+    }
+
+    return NULL;
+}
