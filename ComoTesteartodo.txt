@@ -1,0 +1,12 @@
+# 1. Por las dudas, reparamos cualquier paquete roto en la VM
+sudo dpkg --configure -a
+sudo apt-get install -f
+
+# 2. Actualizamos el catálogo y bajamos la terminal
+sudo apt update
+sudo apt install gnome-terminal
+
+
+chmod +x testear_todo.sh
+
+./testear_todo.sh

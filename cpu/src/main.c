@@ -44,9 +44,11 @@ int main(int argc, char* argv[]) {
     int conexion_scheduler = crear_conexion(ip_kernel_scheduler, puerto_kernel_scheduler);
     if (conexion_scheduler != -1) {
         log_info(logger, "Conectado exitosamente al Kernel Scheduler");
-        // Mandamos el handshake que ya está en tu estructura.h
+        // 1. Mandamos el handshake que ya está en tu estructura.h
         enviar_codigo_operacion(conexion_scheduler, HANDSHAKE_CPU_KERNEL);
-        // después del handshake hay mandar id cpu
+        
+        // 2. Mandamos nuestro ID de CPU para que el Kernel sepa quiénes somos
+        send(conexion_scheduler, &id_cpu, sizeof(int), 0);
     } else {
         log_error(logger, "Fallo al conectar con Kernel Scheduler en %s:%s", ip_kernel_scheduler, puerto_kernel_scheduler);
     }
