@@ -2,13 +2,24 @@
 
 int main(int argc, char* argv[]) {
     
-    t_log* logger = log_create("server.log", "SWAP", true, LOG_LEVEL_INFO);
+    int conexion = crear_conexion("127.0.0.1", "8000");
+  
+    int numero = 0;
+    while(numero != 5) {
+        printf("\nEscribí un número , el es 5 para salir): ");
+        scanf("%d", &numero); 
 
-    log_info(logger, "Modulo SWAP iniciado correctamente");
+        if (numero == 5) {
+            break; 
+        }
 
-    sleep(10);
+        send(conexion, &numero, sizeof(int), 0);
 
-    log_destroy(logger); 
+        printf("Enviado al servidor: %d\n", numero);
+    }
+   
+    liberar_conexion(conexion);
+    printf("Conexión terminada.\n");
 
     return 0;
 }

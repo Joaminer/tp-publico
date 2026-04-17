@@ -2,13 +2,15 @@
 
 int main(int argc, char* argv[]) {
     
-    t_log* logger = log_create("server.log", "kERNEL_MEMORY", true, LOG_LEVEL_INFO);
+   
+    t_log *logger = log_create("server.log", "SERVER_KERNEL_MEMORY", true, LOG_LEVEL_INFO);
 
-    log_info(logger, "Modulo KERNEL_MEMORY iniciado correctamente");
+    char *IP = "127.0.0.1";
+    char *PUERTO = "8000";
 
-    sleep(10);
+    int servidor = iniciar_servidor(IP, PUERTO, logger);
 
-    log_destroy(logger); 
+    atender_clientes_multihilo(servidor, logger, atender_cliente_v1);
 
     return 0;
 }
