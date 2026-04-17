@@ -1,64 +1,27 @@
-include settings.mk
+TARGET = bin/cpu
+CC = gcc
+CFLAGS = -Wall -Wextra -g -I../utils/src
+LDFLAGS = -L../utils -lutils -lcommons -lpthread
 
-################################################################################
+SRCS = src/main.c
+OBJS = $(SRCS:.c=.o)
 
-outname = bin/$(1)
+all: directories $(TARGET)
 
-define compile_out
-	$(CC) $(CFLAGS) -o "$@" $^ $(IDIRS:%=-I%) $(LIBDIRS:%=-L%) $(RUNDIRS:%=-Wl,-rpath,%) $(LIBS:%=-l%)
-endef
+$(TARGET): $(OBJS)
+	@echo "Linkeando $(TARGET)..."
+	$(CC) -o $@ $^ $(LDFLAGS)
+	@echo "¡CPU compilada con éxito!"
 
-define compile_objs
-	$(CC) $(CFLAGS) -c -o "$@" $< $(IDIRS:%=-I%)
-endef
+%.o: %.c
+	@echo "Compilando $<..."
+	$(CC) $(CFLAGS) -c $< -o $@
 
-################################################################################
+directories:
+	@mkdir -p bin
 
-NAME=$(shell pwd | xargs -I{} basename "{}")
-CC=gcc
-AR=ar
-ARFLAGS=rcs
-MAKE=make --no-print-directory
-
-SRCS_C += $(shell find src -iname "*.c")
-SRCS_H += $(shell find src -iname "*.h")
-
-# --- CORRECCIÓN DE RUTAS DE LIBRERÍAS ---
-DEPS = $(foreach SHL,$(SHARED_LIBPATHS),$(SHL:%=%/lib/lib$(notdir $(SHL)).so)) \
-	$(foreach STL,$(STATIC_LIBPATHS),$(STL:%=%/lib$(notdir $(STL)).a))
-
-# --- CORRECCIÓN DE HEADERS (Para encontrar sockets.h) ---
-IDIRS += $(addsuffix /src,$(SHARED_LIBPATHS) $(STATIC_LIBPATHS) .) \
-         $(addsuffix /src/utils,$(STATIC_LIBPATHS)) /usr/local/include
-
-# --- CORRECCIÓN DE DIRECTORIOS DE LIBRERÍAS (Para encontrar libutils.a) ---
-LIBDIRS = $(SHARED_LIBPATHS:%=%/lib) $(STATIC_LIBPATHS) /usr/local/lib
-
-RUNDIRS = $(SHARED_LIBPATHS:%=$(shell pwd)/%/lib)
-OBJS = $(patsubst src/%.c,obj/%.o,$(SRCS_C))
-OUT = $(call outname,$(NAME))
-
-.PHONY: all
-all: debug
-
-.PHONY: debug
-debug: CFLAGS = $(CDEBUG)
-debug: $(OUT)
-
-.PHONY: clean
 clean:
-	-rm -rfv bin/ obj/
-	-for dir in $(STATIC_LIBPATHS); do $(MAKE) -C $$dir clean; done
+	@echo "Limpiando CPU..."
+	rm -rf bin *.o
 
-$(OUT): $(OBJS) | $(dir $(OUT))
-	$(call compile_out)
-
-obj/%.o: src/%.c $(SRCS_H) $(DEPS) | $(dir $(OBJS))
-	$(call compile_objs)
-
-.SECONDEXPANSION:
-$(DEPS):
-	$(MAKE) -C $(dir $@)
-
-$(sort $(dir $(OUT) $(OBJS))):
-	mkdir -pv $@
+.PHONY: all clean directories
